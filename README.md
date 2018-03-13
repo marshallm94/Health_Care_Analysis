@@ -10,18 +10,24 @@
 3. Can I predict total spending on medical expenses (aggregated across states)?
     * Many predictors across a few data sets ---> LASSO or Ridge Regression
 
-## Timeline
+## Workflow Timeline
 
 ### Tuesday, March 13, 2018
 #### Data Cleaning
 
 * Decide which data sets will best answer my questions (.xls files)
-    * cleaned_medicare_county_all.csv
-    * SAHIE_31JAN17_13_18_47_11.csv
-    * medicare_spending_by_county/*
-    * /Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_county_level
+    * **complete**
+        * *SAHIE_31JAN17_13_18_47_11.csv*
+        * *medicare_spending_by_county/ -all*
+        * *cleaned_medicare_county_all.csv*
 
 * Put all desired data sets into .csv format and bring into Python
-    * * medicare_spending_by_county/*
+    * **complete**
+        * *medicare_spending_by_county/ -all*
 * On each data set, if not done already, create *State* column using regex on existing columns
+    * **complete**
 * Deal with NULLs and NaNs (impute or drop)
+
+
+tTThanks to:
+http://code.activestate.com/recipes/577305-python-dictionary-of-us-states-and-territories/

@@ -1,4 +1,3 @@
-import math as m
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -126,11 +125,10 @@ def separate_states(df):
         'WV': 'West Virginia',
         'WY': 'Wyoming'}
     state_dict = {v: k for k, v in abbr_dict.items()}
-    sahie['state'] = sahie["Name"].map(state_dict)
-    sahie['state'] = sahie['state'].astype(str)
-    sahie['state'] = np.where(sahie['state'] == "nan", sahie.Name.str[-2:], sahie['state'])
-
-
+    df['state'] = df["Name"].map(state_dict)
+    df['state'] = df['state'].astype(str)
+    df['state'] = np.where(df['state'] == "nan", df.Name.str[-2:], df['state'])
+    return df
 
 
 if __name__ == "__main__":
@@ -140,9 +138,9 @@ if __name__ == "__main__":
 
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
 
-    df = import_dfs(years)
-    df = change_type(df)
+    med_spending = import_dfs(years)
+    med_spending = change_type(med_spending)
 
-    stratified = df.groupby('year').mean()[['medicare_enrollees','medicare_enrollees_(20%_sample)']]
+    stratified = med_spending.groupby('year').mean()[['medicare_enrollees','medicare_enrollees_(20%_sample)']]
 
-    
+    sahie = separate_states(sahie)
