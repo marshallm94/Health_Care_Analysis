@@ -34,12 +34,16 @@ def format_excel(filepath):
     return df.iloc[1:,:].reset_index(drop=True)
 
 
+def change_type(df):
+    for column in df.columns:
+        if "_adj" in column:
+            df[column] = df[column].astype(float)
 
 if __name__ == "__main__":
     # import csv's
     sahie = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
     medicare = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_county_level/cleaned_medicare_county_all.csv")
 
-    xls = pd.ExcelFile("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_spending_by_county/pa_reimb_county_2003.xls")
-
     df = format_excel("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_spending_by_county/pa_reimb_county_2003.xls")
+
+    change_type(df)
