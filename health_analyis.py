@@ -163,13 +163,15 @@ def replace_nans(data):
         data[column].fillna(random.choice(list(items)), inplace = True)
 
 
-def distribution_plot(df, column_name, target_column, xlab, ylab, title, plot_type="box"):
+def distribution_plot(df, column_name, target_column, xlab, ylab, title, plot_type="box", order=False):
     fig = plt.figure(figsize=(15,5))
     ax = fig.add_subplot(111)
     if plot_type == "box":
         ax = sns.boxplot(df[column_name], df[target_column])
     elif plot_type == "violin":
         ax = sns.violinplot(df[column_name], df[target_column])
+    elif plot_type == "bar":
+        ax = sns.barplot(df[column_name], df[target_column], palette="Greens_d", order=order)
     ax.set_xlabel(xlab, fontweight="bold", fontsize=14)
     ax.set_ylabel(ylab, fontweight="bold", fontsize=14)
     plt.xticks(rotation=75)
@@ -189,7 +191,7 @@ if __name__ == "__main__":
     sahie.drop(['Age Category','Income Category','Race Category','Sex Category'], axis=1, inplace=True)
     to_object(sahie, ["Year",'ID'])
     to_float(sahie, ['Uninsured: Number',"Uninsured: MOE",'Insured: Number','Insured: MOE'])
-    print(count_nans(sahie))
+    sahie_nans = count_nans(sahie)
     sahie = sahie.dropna(axis=0)
     to_object
 
@@ -218,5 +220,9 @@ if __name__ == "__main__":
     #===========================================================================
 
     distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Un-Insured", "Percentage Un-Insured Across States")
+
+    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+
+    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Un-Insured", "Ordered Percentage Un-Insured", plot_type="bar", order=descending_uninssured)
+
     distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Un-Insured", "Percentage Un-Insured Across Years")
-    distribution_plot(medicare, "year", "#_ambulance_users", "Test", "test", "test")
