@@ -1,5 +1,7 @@
 # Health Data
 
+## Guiding Questions
+
 1. Is there a statistically significant difference in the percentage of uninsured individuals across states?
     * regex on "Name" of SAHIE_31JAN17_13_18_47_11.csv file
     * ANOVA
@@ -24,10 +26,24 @@
 * Put all desired data sets into .csv format and bring into Python
     * **complete**
         * *medicare_spending_by_county/ -all*
+
 * On each data set, if not done already, create *State* column using regex on existing columns
     * **complete**
+
 * Deal with NULLs and NaNs (impute or drop)
 
+### Wednesday, March 14, 2018
+#### Visualization, EDA & Hypothesis Testing
 
-tTThanks to:
-http://code.activestate.com/recipes/577305-python-dictionary-of-us-states-and-territories/
+* Create box plots of Percentage uninsured across States and Years.
+    * Seaborn
+
+* Complete both Hypothesis Test's in Guiding Questions
+    * ANOVA (Possible opportunity for writing to an R file)
+
+* Have simple regression complete by end of day, to be refined tomorrow
+
+
+
+Thanks to:
+http://code.activestate.com/recipes/577305-python-dictionary-of-us-states-and-territories/ for the state-abbreviation dictionary.
