@@ -31,6 +31,7 @@
     * **complete**
 
 * Deal with NULLs and NaNs (impute or drop)
+    * **complete**
 
 ### Wednesday, March 14, 2018
 #### Visualization, EDA & Hypothesis Testing

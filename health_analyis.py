@@ -163,10 +163,13 @@ def replace_nans(data):
         data[column].fillna(random.choice(list(items)), inplace = True)
 
 
-def boxplot(df, column_name, target_column, xlab, ylab, title):
+def distribution_plot(df, column_name, target_column, xlab, ylab, title, plot_type="box"):
     fig = plt.figure(figsize=(15,5))
     ax = fig.add_subplot(111)
-    ax = sns.boxplot(df[column_name], df[target_column])
+    if plot_type == "box":
+        ax = sns.boxplot(df[column_name], df[target_column])
+    elif plot_type == "violin":
+        ax = sns.violinplot(df[column_name], df[target_column])
     ax.set_xlabel(xlab, fontweight="bold", fontsize=14)
     ax.set_ylabel(ylab, fontweight="bold", fontsize=14)
     plt.xticks(rotation=75)
@@ -195,25 +198,25 @@ if __name__ == "__main__":
     medicare.drop('unnamed:_0', axis=1, inplace=True)
     should_be_objects = list(medicare.select_dtypes(include=['int64']).columns)
     to_object(medicare, should_be_objects)
+    medicare_nans = count_nans(medicare)
+    # dropping all nans: While this does cut my data down to roughly a third of what it was, my reasoning is that since the purpose of this data set will be prediction, I would rather have the precision of my model decline due to the lack of data than have it ARTIFICIALLY increase due to reducing the noise in each column by imputing the mean.
+    medicare = medicare.dropna(axis=0)
 
+    # medicare spending by year data set
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
-
     med_spending = import_dfs(years)
     med_spending = change_type(med_spending)
+    to_object(med_spending, ['county_id'])
+    med_spending_nans = count_nans(med_spending)
 
-    stratified = med_spending.groupby('year').mean()[['medicare_enrollees','medicare_enrollees_(20%_sample)']]
+    stratified = med_spending.groupby('year').count()[['medicare_enrollees','medicare_enrollees_(20%_sample)']]
 
     states = list(sahie.groupby('state').count().index)
-
-    # for column in medicare.select_dtypes(exclude=['object']).columns:
-    #     replace_nans(medicare, column)
-    # for column in sahie.select_dtypes(exclude=['object']).columns:
-    #     replace_nans(medicare, column)
-    # for column in med_spending.select_dtypes(exclude=['object']).columns:
-    #     replace_nans(medicare, column)
 
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
 
-    # boxplot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Un-Insured", "Percentage Un-Insured Across States")
+    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Un-Insured", "Percentage Un-Insured Across States")
+    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Un-Insured", "Percentage Un-Insured Across Years")
+    distribution_plot(medicare, "year", "#_ambulance_users", "Test", "test", "test")
