@@ -1,3 +1,4 @@
+import math as m
 import pandas as pd
 from pandas.plotting import scatter_matrix
 import numpy as np
@@ -7,6 +8,7 @@ import random
 import scipy.stats as stats
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 sns.set(style='white')
 
 
@@ -234,11 +236,12 @@ if __name__ == "__main__":
     medicare = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_county_level/cleaned_medicare_county_all.csv")
     medicare.drop('unnamed:_0', axis=1, inplace=True)
     should_be_objects = list(medicare.select_dtypes(include=['int64']).columns)
+    should_be_objects.remove('year')
     to_object(medicare, should_be_objects)
     medicare_nans = count_nans(medicare)
     # dropping all nans: While this does cut my data down to roughly a third of what it was, my reasoning is that since the purpose of this data set will be prediction, I would rather have the precision of my model decline due to the lack of data than have it ARTIFICIALLY increase due to reducing the noise in each column by imputing the mean.
     medicare = medicare.dropna(axis=0)
-    medicare['cost_per_benificiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
+    medicare['cost_per_beneficiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
 
     # medicare spending by year data set
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
@@ -254,24 +257,31 @@ if __name__ == "__main__":
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
-
-    heatmap(sahie)
-    heatmap(med_spending)
-
-    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-
-    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="state_vs_uninsured", order=descending_uninssured)
-
-    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="state_vs_uninsured_box", order=descending_uninssured)
-
-    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", filename="year_vs_uninsured")
+    #
+    # heatmap(sahie)
+    # heatmap(med_spending)
+    #
+    # descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+    #
+    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="state_vs_uninsured", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="state_vs_uninsured_box", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", filename="year_vs_uninsured")
 
     #===========================================================================
     #=============================== MODELING ==================================
     #===========================================================================
-    X = medicare.drop("cost_per_benificiary")
-    y = medical["cost_per_benificiary"]
+    numerics = medicare[list(medicare.select_dtypes(include=['float64','int64']).columns)]
+    X = numerics.drop("cost_per_beneficiary", axis=1)
+    y = medicare["cost_per_beneficiary"]
     x_train, x_test, y_train, y_test = train_test_split(X, y)
 
+    # will use multiple linear regression as benchmark for future models
+    lm = LinearRegression()
+    lm.fit(x_train, y_train)
+    linear_predictions = lm.predict(x_train)
+    linear_regression_rmse = m.sqrt(mean_squared_error(y_train, linear_predictions))
+    print("\nThe training RMSE using multiple linear regression is {}".format(linear_regression_rmse))
 
     lassie = Lasso()
