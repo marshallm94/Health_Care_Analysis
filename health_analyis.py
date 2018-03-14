@@ -138,16 +138,29 @@ def to_object(df, columns):
 
 
 def to_float(df, columns):
-    for column in columns:
-        df[column] = df[column].astype(float)
+    for column_name in columns:
+        remove_commas(df, column_name)
+        df[column_name] = df[column_name].astype(float)
 
-def remove_commas(df, columns):
-    for column in df.columns:
-        df[column] = df.column.str.replace(",", "")
 
-def replace_nans(data, column_name):
-   items = data[column_name].dropna(axis=0, inplace = False)
-   data[column_name].fillna(random.choice(list(items)), inplace = True)
+def remove_commas(df, column_name):
+    df[column_name] = df[column_name].astype(str)
+    df[column_name] = df[column_name].str.replace(",", "")
+    df[column_name] = df[column_name].str.replace("<", "")
+
+
+def count_nans(data):
+    total = []
+    for column in data.select_dtypes(exclude=['object']).columns:
+        count = np.sum(np.isnan(data[column].values))
+        total.append((column, count))
+    return total
+
+
+def replace_nans(data):
+    for column in data.select_dtypes(exclude=['object']).columns:
+        items = data[column].dropna(axis=0, inplace = False)
+        data[column].fillna(random.choice(list(items)), inplace = True)
 
 
 def boxplot(df, column_name, target_column, xlab, ylab, title):
@@ -165,15 +178,23 @@ if __name__ == "__main__":
     #===========================================================================
     #=========================== DATA CLEANING =================================
     #===========================================================================
+
+    # sahie data set
     sahie = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
 
     sahie = separate_states(sahie)
     sahie.drop(['Age Category','Income Category','Race Category','Sex Category'], axis=1, inplace=True)
-    # to_object(sahie, ["Year",'ID'])
-    # remove_commas(sahie, ['Uninsured: Number'])
-    # to_float(sahie, ['Uninsured: Number','Insured: Number'])
+    to_object(sahie, ["Year",'ID'])
+    to_float(sahie, ['Uninsured: Number',"Uninsured: MOE",'Insured: Number','Insured: MOE'])
+    print(count_nans(sahie))
+    sahie = sahie.dropna(axis=0)
+    to_object
 
+    # mediare data set
     medicare = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_county_level/cleaned_medicare_county_all.csv")
+    medicare.drop('unnamed:_0', axis=1, inplace=True)
+    should_be_objects = list(medicare.select_dtypes(include=['int64']).columns)
+    to_object(medicare, should_be_objects)
 
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
 
@@ -195,4 +216,4 @@ if __name__ == "__main__":
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
 
-    boxplot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Un-Insured", "Percentage Un-Insured Across States")
+    # boxplot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Un-Insured", "Percentage Un-Insured Across States")
