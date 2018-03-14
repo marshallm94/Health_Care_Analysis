@@ -9,7 +9,6 @@ import scipy.stats as stats
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-sns.set(style='white')
 
 
 def format_excel(filepath):
@@ -187,36 +186,33 @@ def distribution_plot(df, column_name, target_column, xlab, ylab, title, filenam
     plt.savefig(filename)
     plt.show()
 
-def heatmap(df):
+def heatmap(df, filename):
     corr = df.corr()
     mask = np.zeros_like(corr, dtype=np.bool)
     mask[np.triu_indices_from(mask)] = True
-    f, ax = plt.subplots(figsize=(8, 6))
+    f, ax = plt.subplots(figsize=(9, 5))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    plt.xticks(rotation=75)
+    ax.set_xticklabels(list(df.columns), rotation = 45, ha="right")
+    plt.xticks(rotation=30)
     sns.heatmap(corr, mask=mask, cmap=cmap, vmax=0.3, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5})
     plt.yticks(rotation=0)
+    plt.suptitle("Correlation Between Attributes", fontweight="bold", fontsize=16)
+    plt.savefig(filename)
 
-
-def group_means(df, group_on_column, target_column):
-    possible_values = list(df.groupby(group_on_column).count().index)
-    mask_dict = {}
-    for val in possible_values:
-        mask = df[group_on_column] == val
-        mask_dict[val] = mask
+def ANOVA(df, group_column, target_column):
+    masks = []
+    for val in list(df.groupby(group_column).count().index):
+        mask = df[group_column] == val
+        masks.append(mask)
 
     arrays = []
-    for k, v in mask_dict.items():
-        array = df[mask][target_column]
-        arrays.append(array)
-
-    return arrays
-
-
-# test = group_means(sahie, "state", "Uninsured: %")
-
+    for mask in masks:
+        arr = df[mask][target_column]
+        arrays.append(arr)
+    return stats.f_oneway(arrays[0], arrays[1], arrays[2], arrays[3], arrays[4], arrays[5], arrays[6], arrays[7], arrays[8])
 
 if __name__ == "__main__":
+
     #===========================================================================
     #=========================== DATA CLEANING =================================
     #===========================================================================
@@ -258,16 +254,24 @@ if __name__ == "__main__":
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
     #
-    # heatmap(sahie)
-    # heatmap(med_spending)
-    #
-    # descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-    #
-    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="state_vs_uninsured", order=descending_uninssured)
-    #
-    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="state_vs_uninsured_box", order=descending_uninssured)
-    #
-    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", filename="year_vs_uninsured")
+    heatmap(sahie, "figures/heatmap")
+
+    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+
+    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
+
+    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
+
+    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", filename="figures/year_vs_uninsured")
+
+    # create csv for anova in R
+    df = sahie[['state','Year','Uninsured: %']]
+    df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
+    f, p = ANOVA(df, "Year", "Uninsured: %")
+    print(f"\nF-Statistic: {f}\nP-Value: {p}")
+
+
+
 
     #===========================================================================
     #=============================== MODELING ==================================

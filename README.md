@@ -38,11 +38,14 @@
 
 * Create box plots of Percentage uninsured across States and Years.
     * Seaborn
+    * **complete**
 
 * Complete both Hypothesis Test's in Guiding Questions
     * ANOVA (Possible opportunity for writing to an R file)
+    * **complete**
 
 * Have simple regression complete by end of day, to be refined tomorrow
+    * **complete**
 
 
 
