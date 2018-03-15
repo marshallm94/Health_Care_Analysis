@@ -188,13 +188,13 @@ def distribution_plot(df, column_name, target_column, xlab, ylab, title, filenam
 
 def heatmap(df, filename):
     corr = df.corr()
+    ylabels = ["{} = {}".format(col, x + 1) for x, col in enumerate(list(corr.columns))]
+    xlabels = [str(x + 1) for x in range(len(ylabels))]
     mask = np.zeros_like(corr, dtype=np.bool)
     mask[np.triu_indices_from(mask)] = True
     f, ax = plt.subplots(figsize=(9, 5))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    ax.set_xticklabels(list(df.columns), rotation = 45, ha="right")
-    plt.xticks(rotation=30)
-    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=0.3, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5})
+    sns.heatmap(corr, mask=mask, cmap=cmap, xticklabels=xlabels, yticklabels=ylabels, vmax=0.3, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5})
     plt.yticks(rotation=0)
     plt.suptitle("Correlation Between Attributes", fontweight="bold", fontsize=16)
     plt.savefig(filename)
