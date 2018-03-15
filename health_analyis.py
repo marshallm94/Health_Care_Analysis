@@ -269,20 +269,20 @@ if __name__ == "__main__":
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
 
-    # heatmap(sahie, "figures/heatmap")
-    #
-    # descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-    #
-    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
-    #
-    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
-    #
-    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
-    #
-    # # create csv for anova in R
-    # df = sahie[['state','Year','Uninsured: %']]
-    # df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
-    # f, p = ANOVA(df, "Year", "Uninsured: %")
+    heatmap(sahie, "figures/heatmap")
+
+    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+
+    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
+
+    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
+
+    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
+
+    # create csv for anova in R
+    df = sahie[['state','Year','Uninsured: %']]
+    df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
+    f, p = ANOVA(df, "Year", "Uninsured: %")
 
     #===========================================================================
     #=============================== MODELING ==================================
