@@ -256,28 +256,30 @@ if __name__ == "__main__":
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
 
-    heatmap(sahie, "figures/heatmap")
-
-    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-
-    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
-
-    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
-
-    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
-
-    # create csv for anova in R
-    df = sahie[['state','Year','Uninsured: %']]
-    df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
-    f, p = ANOVA(df, "Year", "Uninsured: %")
+    # heatmap(sahie, "figures/heatmap")
+    #
+    # descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+    #
+    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
+    #
+    # # create csv for anova in R
+    # df = sahie[['state','Year','Uninsured: %']]
+    # df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
+    # f, p = ANOVA(df, "Year", "Uninsured: %")
 
     #===========================================================================
     #=============================== MODELING ==================================
     #===========================================================================
-    simple_x = medicare[['ma_participation_rate','actual_per_capita_costs']]
+    simple_x = medicare['ma_participation_rate'].values.reshape(-1,1)
+    # simple_x = medicare[['ma_participation_rate','actual_per_capita_costs']]
     simple_y = medicare['cost_per_beneficiary']
     x_train, x_test, y_train, y_test = train_test_split(simple_x, simple_y)
-
+    y_train.values.reshape(-1,1)
+    y_test.values.reshape(-1,1)
     # will use multiple linear regression as benchmark for future models
     lm = LinearRegression()
     lm.fit(x_train, y_train)
@@ -296,8 +298,38 @@ if __name__ == "__main__":
     medicare.corr()['cost_per_beneficiary'].sort_values(ascending=False)
     medicare.corr()['actual_per_capita_costs'].sort_values(ascending=False)['ma_participation_rate']
 
+    y_train = np.array(y_train)
 
+    x_train = x_train[0:100]
+    y_train = x_train[0:100]
 
+    alpha = 2
+    beta = 2
+    mu = 0
+    sd = 20
+    number_iterations = 50
+    draws = 100
     with pm.Model() as model:
-        
-        beta_1 = pm.Uniform("beta_1",)
+
+        sigma = pm.HalfCauchy("sigma", beta=10, testval=1.)
+        intercept = pm.Normal("intercept", mu, sd)
+        beta_1 = pm.Normal("beta_1", mu, sd)
+        # beta_2 = pm.Normal("beta_2", mu, sd)
+        # intercept = pm.Beta("intercept", alpha, beta)
+        # beta_1 = pm.Beta("beta_1", alpha, beta)
+        # beta_2 = pm.Beta("beta_2", alpha, beta)
+
+        # line = intercept + (beta_1 * x_train['ma_participation_rate']) + (beta_2 * x_train['actual_per_capita_costs'])
+
+        likelihood = pm.Normal('y', mu=intercept + beta_1 * x_train, sd=sigma, observed=y_train)
+        # likelihood = pm.Beta('y', alpha=line, beta=beta, observed=line)
+
+        # start= pm.find_MAP()
+        # step = pm.Metropolis()
+        # trace = pm.sample(1000, step, random_seed=123, progressbar=True)
+        trace = pm.sample(progressbar=True)
+
+    plt.figure(figsize=(7,7))
+    pm.traceplot(trace)
+    plt.tight_layout()
+    plt.show()
