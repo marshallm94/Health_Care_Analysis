@@ -44,8 +44,15 @@
     * ANOVA (Possible opportunity for writing to an R file)
     * **complete**
 
-* Have simple regression complete by end of day, to be refined tomorrow
+* Have a simple regression model complete by end of day, to be refined tomorrow
     * **complete**
+
+### Thursday, March 15, 2018
+#### Modeling
+
+* Create modeling pipeline, implementing Lasso and Cross Validation within PyMC.
+
+* Finalize Presentation.md
 
 
 
