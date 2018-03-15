@@ -7,8 +7,9 @@ import seaborn as sns
 import random
 import scipy.stats as stats
 from sklearn.pipeline import Pipeline
+from basis_expansions.basis_expansions import NaturalCubicSpline
 from sklearn.linear_model import Lasso, LinearRegression
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 import os,sys
@@ -288,36 +289,65 @@ if __name__ == "__main__":
     #===========================================================================
     numerics = medicare[medicare.select_dtypes(exclude=['object']).columns]
     X = numerics.drop('cost_per_beneficiary', axis=1)
-    y = numerics['cost_per_beneficiary'].values.reshape(-1,1)
+    y = pd.DataFrame(numerics['cost_per_beneficiary'])
     x_train, x_test, y_train, y_test = train_test_split(X, y)
     # will use multiple linear regression as benchmark for future models
-    lm = LinearRegression()
-    lm.fit(x_train, y_train)
-    linear_predictions = lm.predict(x_train)
-    linear_regression_rmse = m.sqrt(mean_squared_error(y_train, linear_predictions))
-    print("\nThe training RMSE using multiple linear regression is {}".format(linear_regression_rmse))
+    # lm = LinearRegression()
+    # lm.fit(x_train, y_train)
+    # linear_predictions = lm.predict(x_train)
+    # linear_regression_rmse = m.sqrt(mean_squared_error(y_train, linear_predictions))
+    # print("\nThe training RMSE using multiple linear regression is {}".format(linear_regression_rmse))
 
     # test_preds = lm.predict(x_test)
     # test_rmse = m.sqrt(mean_squared_error(y_test, test_preds))
     # print("\nThe testing RMSE using multiple linear regression is {}".format(test_rmse))
 
 
-    pipe = Pipeline([
+    lasso_pipeline = Pipeline([
         ("standardize", StandardScaler()),
         ("lasso", Lasso())
     ])
 
-    pipe.fit(x_train, y_train)
-    preds = pipe.predict(x_train).reshape(-1,1)
-    train_rsme = m.sqrt(mean_squared_error(y_train, preds))
-    print(train_rsme)
+    linear_pipeline = Pipeline([
+        ("standardize", StandardScaler()),
+        ("regression", LinearRegression())
+    ])
 
+    k = KFold(3)
+    for train_index, test_index in k.split(x_train):
+        model = LinearRegression()
+        model.fit(x_train.iloc[train_index, :], y_train.iloc[train_index, :])
+        predictions = model.predict(x_train.iloc[test_index, :])
+        rsme = m.sqrt(mean_squared_error(y_train.iloc[test_index,:], predictions))
+        print(f"RSME = {rsme}")
+
+
+    #
+    # models = [lasso_pipeline, linear_pipeline]
+    # model_evaluation_dict = {}
+    # for model in models:
+    #     k = KFold(3)
+    #     rsme_lis = []
+    #     for train_index, test_index in k.split(x_train):
+    #
+    #         x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
+    #         y_cv, y_cv_test = y_train[train_index], y_train[test_index]
+    #
+    #         model.fit(x_cv, y_cv)
+    #         predictions = model.predict(x_cv_test)
+    #         rsme = m.sqrt(mean_squared_error(y_cv_test, predictions))
+    #         print(f"RSME = {rsme}")
+    #         rsme_lis.append(rsme)
+    #
+    #     avg_cv_rsme = sum(rsme_lis)/len(rsme_lis)
+    #     model_evaluation_dict[model] = avg_cv_rsme
 
     #===========================================================================
     #========================= MODEL EVALUATION ================================
     #===========================================================================
 
-    fig, ax = plt.subplots(figsize=(12, 3))
-    residual_plot(ax, preds, y_train, preds)
-    ax.set_title("Residuals by Predicted Values")
-    ax.set_xlabel("$\hat y$")
+    # fig, ax = plt.subplots(figsize=(12, 3))
+    # residual_plot(ax, preds, y_train, preds)
+    # ax.set_title("Residuals by Predicted Values")
+    # ax.set_xlabel("$\hat y$")
+    # plt.show()
