@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import random
 import scipy.stats as stats
+from sklearn.pipeline import Pipeline
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 import os,sys
 import pymc3 as pm
@@ -188,6 +190,7 @@ def distribution_plot(df, column_name, target_column, xlab, ylab, title, filenam
     plt.savefig(filename)
     plt.show()
 
+
 def heatmap(df, filename):
     corr = df.corr()
     ylabels = ["{} = {}".format(col, x + 1) for x, col in enumerate(list(corr.columns))]
@@ -201,6 +204,7 @@ def heatmap(df, filename):
     plt.suptitle("Correlation Between Attributes", fontweight="bold", fontsize=16)
     plt.savefig(filename)
 
+
 def ANOVA(df, group_column, target_column):
     masks = []
     for val in list(df.groupby(group_column).count().index):
@@ -212,6 +216,14 @@ def ANOVA(df, group_column, target_column):
         arr = df[mask][target_column]
         arrays.append(arr)
     return stats.f_oneway(arrays[0], arrays[1], arrays[2], arrays[3], arrays[4], arrays[5], arrays[6], arrays[7], arrays[8])
+
+
+def residual_plot(ax, x, y, y_hat, n_bins=50):
+    residuals = y - y_hat
+    ax.axhline(0, color="black", linestyle="--")
+    ax.scatter(x, residuals, color="grey", alpha=0.5)
+    ax.set_ylabel("Residuals ($y - \hat y$)")
+
 
 if __name__ == "__main__":
 
@@ -274,12 +286,10 @@ if __name__ == "__main__":
     #===========================================================================
     #=============================== MODELING ==================================
     #===========================================================================
-    simple_x = medicare['ma_participation_rate'].values.reshape(-1,1)
-    # simple_x = medicare[['ma_participation_rate','actual_per_capita_costs']]
-    simple_y = medicare['cost_per_beneficiary']
-    x_train, x_test, y_train, y_test = train_test_split(simple_x, simple_y)
-    y_train.values.reshape(-1,1)
-    y_test.values.reshape(-1,1)
+    numerics = medicare[medicare.select_dtypes(exclude=['object']).columns]
+    X = numerics.drop('cost_per_beneficiary', axis=1)
+    y = numerics['cost_per_beneficiary'].values.reshape(-1,1)
+    x_train, x_test, y_train, y_test = train_test_split(X, y)
     # will use multiple linear regression as benchmark for future models
     lm = LinearRegression()
     lm.fit(x_train, y_train)
@@ -292,44 +302,22 @@ if __name__ == "__main__":
     # print("\nThe testing RMSE using multiple linear regression is {}".format(test_rmse))
 
 
+    pipe = Pipeline([
+        ("standardize", StandardScaler()),
+        ("lasso", Lasso())
+    ])
+
+    pipe.fit(x_train, y_train)
+    preds = pipe.predict(x_train).reshape(-1,1)
+    train_rsme = m.sqrt(mean_squared_error(y_train, preds))
+    print(train_rsme)
+
+
     #===========================================================================
-    #================================== PyMC ===================================
+    #========================= MODEL EVALUATION ================================
     #===========================================================================
-    medicare.corr()['cost_per_beneficiary'].sort_values(ascending=False)
-    medicare.corr()['actual_per_capita_costs'].sort_values(ascending=False)['ma_participation_rate']
 
-    y_train = np.array(y_train)
-
-    x_train = x_train[0:100]
-    y_train = x_train[0:100]
-
-    alpha = 2
-    beta = 2
-    mu = 0
-    sd = 20
-    number_iterations = 50
-    draws = 100
-    with pm.Model() as model:
-
-        sigma = pm.HalfCauchy("sigma", beta=10, testval=1.)
-        intercept = pm.Normal("intercept", mu, sd)
-        beta_1 = pm.Normal("beta_1", mu, sd)
-        # beta_2 = pm.Normal("beta_2", mu, sd)
-        # intercept = pm.Beta("intercept", alpha, beta)
-        # beta_1 = pm.Beta("beta_1", alpha, beta)
-        # beta_2 = pm.Beta("beta_2", alpha, beta)
-
-        # line = intercept + (beta_1 * x_train['ma_participation_rate']) + (beta_2 * x_train['actual_per_capita_costs'])
-
-        likelihood = pm.Normal('y', mu=intercept + beta_1 * x_train, sd=sigma, observed=y_train)
-        # likelihood = pm.Beta('y', alpha=line, beta=beta, observed=line)
-
-        # start= pm.find_MAP()
-        # step = pm.Metropolis()
-        # trace = pm.sample(1000, step, random_seed=123, progressbar=True)
-        trace = pm.sample(progressbar=True)
-
-    plt.figure(figsize=(7,7))
-    pm.traceplot(trace)
-    plt.tight_layout()
-    plt.show()
+    fig, ax = plt.subplots(figsize=(12, 3))
+    residual_plot(ax, preds, y_train, preds)
+    ax.set_title("Residuals by Predicted Values")
+    ax.set_xlabel("$\hat y$")
