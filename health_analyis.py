@@ -8,7 +8,7 @@ import random
 import scipy.stats as stats
 from sklearn.pipeline import Pipeline
 from basis_expansions.basis_expansions import NaturalCubicSpline
-from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
@@ -291,21 +291,10 @@ if __name__ == "__main__":
     X = numerics.drop('cost_per_beneficiary', axis=1)
     y = pd.DataFrame(numerics['cost_per_beneficiary'])
     x_train, x_test, y_train, y_test = train_test_split(X, y)
-    # will use multiple linear regression as benchmark for future models
-    # lm = LinearRegression()
-    # lm.fit(x_train, y_train)
-    # linear_predictions = lm.predict(x_train)
-    # linear_regression_rmse = m.sqrt(mean_squared_error(y_train, linear_predictions))
-    # print("\nThe training RMSE using multiple linear regression is {}".format(linear_regression_rmse))
-
-    # test_preds = lm.predict(x_test)
-    # test_rmse = m.sqrt(mean_squared_error(y_test, test_preds))
-    # print("\nThe testing RMSE using multiple linear regression is {}".format(test_rmse))
-
 
     lasso_pipeline = Pipeline([
         ("standardize", StandardScaler()),
-        ("lasso", Lasso())
+        ("lasso", Lasso(2.0))
     ])
 
     linear_pipeline = Pipeline([
@@ -313,34 +302,81 @@ if __name__ == "__main__":
         ("regression", LinearRegression())
     ])
 
-    k = KFold(3)
-    for train_index, test_index in k.split(x_train):
-        model = LinearRegression()
-        model.fit(x_train.iloc[train_index, :], y_train.iloc[train_index, :])
-        predictions = model.predict(x_train.iloc[test_index, :])
-        rsme = m.sqrt(mean_squared_error(y_train.iloc[test_index,:], predictions))
-        print(f"RSME = {rsme}")
+    ridge_pipeline = Pipeline([
+        ("standardize", StandardScaler()),
+        ("ridge", Ridge(2.0))
+    ])
+
+    alphas = [100, 10, 5]
+    alphas_2 = [4., 3., 2., 1.]
+
+    for alpha in alphas_2:
+        k = KFold(10)
+        ridge_rsme_lis = []
+        lasso_rsme_lis = []
+        regularized_dict = {}
+        for train_index, test_index in k.split(x_train):
+
+            x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
+            y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
+
+            ridge_pipe = Pipeline([
+                ("standardize", StandardScaler()),
+                ("ridge", Ridge(alpha=alpha))
+            ])
+            lasso_pipe = Pipeline([
+                ("standardize", StandardScaler()),
+                ("lasso", Lasso(alpha=alpha))
+            ])
+
+            ridge_pipe.fit(x_cv, y_cv)
+            lasso_pipe.fit(x_cv, y_cv)
+
+            ridge_predictions = ridge_pipe.predict(x_cv_test)
+            lasso_predictions = lasso_pipe.predict(x_cv_test)
+
+            ridge_rsme = m.sqrt(mean_squared_error(y_cv_test, ridge_predictions))
+            lasso_rsme = m.sqrt(mean_squared_error(y_cv_test, lasso_predictions))
+
+            ridge_rsme_lis.append(ridge_rsme)
+            lasso_rsme_lis.append(lasso_rsme)
+
+        ridge_avg_cv_rsme = sum(ridge_rsme_lis)/len(ridge_rsme_lis)
+        lasso_avg_cv_rsme = sum(lasso_rsme_lis)/len(lasso_rsme_lis)
+
+        regularized_dict["Ridge"] = [alpha, ridge_avg_cv_rsme]
+        regularized_dict["Lasso"] = [alpha, lasso_avg_cv_rsme]
+        print(regularized_dict)
 
 
-    #
-    # models = [lasso_pipeline, linear_pipeline]
-    # model_evaluation_dict = {}
-    # for model in models:
-    #     k = KFold(3)
-    #     rsme_lis = []
-    #     for train_index, test_index in k.split(x_train):
-    #
-    #         x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
-    #         y_cv, y_cv_test = y_train[train_index], y_train[test_index]
-    #
-    #         model.fit(x_cv, y_cv)
-    #         predictions = model.predict(x_cv_test)
-    #         rsme = m.sqrt(mean_squared_error(y_cv_test, predictions))
-    #         print(f"RSME = {rsme}")
-    #         rsme_lis.append(rsme)
-    #
-    #     avg_cv_rsme = sum(rsme_lis)/len(rsme_lis)
-    #     model_evaluation_dict[model] = avg_cv_rsme
+
+
+
+
+    models = [lasso_pipeline, linear_pipeline, ridge_pipeline]
+    model_evaluation_dict = {}
+    for model in models:
+        k = KFold(10)
+        rsme_lis = []
+        for train_index, test_index in k.split(x_train):
+
+            x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
+            y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
+
+            model.fit(x_cv, y_cv)
+            predictions = model.predict(x_cv_test)
+            rsme = m.sqrt(mean_squared_error(y_cv_test, predictions))
+            model_name = list(model.named_steps.keys())[1]
+            print(f"Model - {model_name} | RSME - {rsme}")
+            rsme_lis.append(rsme)
+
+        avg_cv_rsme = sum(rsme_lis)/len(rsme_lis)
+
+        model_evaluation_dict[model_name] = avg_cv_rsme
+
+    preds = ridge_pipeline.predict(x_test)
+    test_rsme = m.sqrt(mean_squared_error(y_test, preds))
+    print(test_rsme)
 
     #===========================================================================
     #========================= MODEL EVALUATION ================================
