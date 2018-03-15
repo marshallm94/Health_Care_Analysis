@@ -9,6 +9,8 @@ import scipy.stats as stats
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+import os,sys
+import pymc3 as pm
 
 
 def format_excel(filepath):
@@ -171,7 +173,7 @@ def replace_nans(data):
 
 
 def distribution_plot(df, column_name, target_column, xlab, ylab, title, filename, plot_type="box", order=None):
-    fig = plt.figure(figsize=(15,6))
+    fig = plt.figure(figsize=(13,6))
     ax = fig.add_subplot(111)
     if plot_type == "box":
         ax = sns.boxplot(df[column_name], df[target_column], order=order)
@@ -179,8 +181,8 @@ def distribution_plot(df, column_name, target_column, xlab, ylab, title, filenam
         ax = sns.violinplot(df[column_name], df[target_column])
     elif plot_type == "bar":
         ax = sns.barplot(df[column_name], df[target_column], palette="Greens_d", order=order)
-    ax.set_xlabel(xlab, fontweight="bold", fontsize=14)
-    ax.set_ylabel(ylab, fontweight="bold", fontsize=14)
+    ax.set_xlabel(xlab, fontweight="bold", fontsize=13)
+    ax.set_ylabel(ylab, fontweight="bold", fontsize=13)
     plt.xticks(rotation=75)
     plt.suptitle(title, fontweight="bold", fontsize=16)
     plt.savefig(filename)
@@ -253,7 +255,7 @@ if __name__ == "__main__":
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
-    #
+
     heatmap(sahie, "figures/heatmap")
 
     descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
@@ -262,24 +264,19 @@ if __name__ == "__main__":
 
     distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
 
-    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", filename="figures/year_vs_uninsured")
+    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
 
     # create csv for anova in R
     df = sahie[['state','Year','Uninsured: %']]
     df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
     f, p = ANOVA(df, "Year", "Uninsured: %")
-    print(f"\nF-Statistic: {f}\nP-Value: {p}")
-
-
-
 
     #===========================================================================
     #=============================== MODELING ==================================
     #===========================================================================
-    numerics = medicare[list(medicare.select_dtypes(include=['float64','int64']).columns)]
-    X = numerics.drop("cost_per_beneficiary", axis=1)
-    y = medicare["cost_per_beneficiary"]
-    x_train, x_test, y_train, y_test = train_test_split(X, y)
+    simple_x = medicare[['ma_participation_rate','actual_per_capita_costs']]
+    simple_y = medicare['cost_per_beneficiary']
+    x_train, x_test, y_train, y_test = train_test_split(simple_x, simple_y)
 
     # will use multiple linear regression as benchmark for future models
     lm = LinearRegression()
@@ -288,4 +285,19 @@ if __name__ == "__main__":
     linear_regression_rmse = m.sqrt(mean_squared_error(y_train, linear_predictions))
     print("\nThe training RMSE using multiple linear regression is {}".format(linear_regression_rmse))
 
-    lassie = Lasso()
+    # test_preds = lm.predict(x_test)
+    # test_rmse = m.sqrt(mean_squared_error(y_test, test_preds))
+    # print("\nThe testing RMSE using multiple linear regression is {}".format(test_rmse))
+
+
+    #===========================================================================
+    #================================== PyMC ===================================
+    #===========================================================================
+    medicare.corr()['cost_per_beneficiary'].sort_values(ascending=False)
+    medicare.corr()['actual_per_capita_costs'].sort_values(ascending=False)['ma_participation_rate']
+
+
+
+    with pm.Model() as model:
+        
+        beta_1 = pm.Uniform("beta_1",)

@@ -64,6 +64,30 @@ Balanced one-way analysis of variance power calculation
           power = 0.9999999
 ```
 
+Looking further at *which* years have a significant difference, we get the following.
+
+```
+2014-2006       0.000000e+00  
+2014-2007       0.000000e+00  
+2014-2008       0.000000e+00  
+2014-2009       0.000000e+00  
+2014-2010       0.000000e+00  
+2014-2011       0.000000e+00  
+2014-2012       0.000000e+00  
+2014-2013       0.000000e+00  
+2013-2010       3.320018e-10  
+2012-2010       5.573403e-10  
+2010-2007       6.386250e-07  
+2013-2009       3.482696e-05  
+2012-2009       5.065515e-05  
+2013-2006       8.212339e-05  
+2012-2006       1.178423e-04  
+2010-2008       3.270694e-04  
+2011-2010       5.093999e-03  
+2009-2007       6.502273e-03  
+2007-2006       1.220040e-02 
+```
+
 When the theory doesn't fit the data, *we let the theory go*, therefore rejecting out null hypothesis and accepting the alternative.
 
 #### Question
