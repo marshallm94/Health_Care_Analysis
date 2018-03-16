@@ -369,16 +369,19 @@ if __name__ == "__main__":
 
         model_evaluation_dict[model_name] = avg_cv_rsme
 
-    preds = ridge_pipeline.predict(x_test)
-    test_rsme = m.sqrt(mean_squared_error(y_test, preds))
-    print(test_rsme)
-
     #===========================================================================
     #========================= MODEL EVALUATION ================================
     #===========================================================================
 
-    fig, ax = plt.subplots(figsize=(12, 3))
-    residual_plot(ax, preds, y_test, preds)
-    ax.set_title("Residuals by Predicted Values")
-    ax.set_xlabel("$\hat y$")
-    plt.show()
+    preds = linear_pipeline.predict(x_test)
+    test_rsme = m.sqrt(mean_squared_error(y_test, preds))
+    print(test_rsme)
+
+    pred_real_dict = {"Predicted": [], "Actual": []}
+    for x, i in enumerate(preds[:6]):
+        predicted = "$" + str(round(preds[x][0], 2))
+        actual = "$" + str(round(y_test.iloc[x, 0], 2))
+        pred_real_dict["Predicted"].append(predicted)
+        pred_real_dict["Actual"].append(actual)
+
+    predicted_actual_df = pd.DataFrame(pred_real_dict)
