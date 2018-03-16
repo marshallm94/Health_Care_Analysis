@@ -2,7 +2,24 @@
 
 ### Overview
 
-[data](https://github.com/brendan-drew/County-Medicare-Spending/tree/master/data)
+The [data](https://github.com/brendan-drew/County-Medicare-Spending/tree/master/data) that I used for this analysis is various measures of health care in the United States, measured for the counties of each state.
+
+There wer quite a few data sets to choose from, the two I settled on described below
+
+##### Inference Data Set
+
+With a little over 28,000 rows and 13, the only cleang I had to do on this data set was to drop the first four columns you can see (one group per column, not adding any information to the data), and change the name column to be only states.
+
+![](figures/inference_data_screenshot.png)
+
+##### Prediction Data Set
+
+With 25,000 rows and 221 columns, this data set has a lot of NaN's. After toying around with the idea of imputing column means for missing values, I decided to drop all rows that had any NaN's in them. My reasoning for this decision was that, while this does cut my data down to roughly a third of what it was, since the purpose of this data set will be prediction, I would rather have the precision of my model decline due to the lack of data than have it artificially increase due to reducing the noise in each column by imputing the mean. In the end, I still ended up with 8,800 rows.
+
+![](figures/prediction_data_screenshot.png)
+
+
+
 
 ### Guiding Questions/Goals
 
@@ -141,4 +158,13 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Lasso Regression - 148.280
 Linear Regression - 122.606
 Ridge Regression - 124.374
+```
+
+```
+    Actual  | Predicted
+0  $8290.63 | $8326.37
+1  $8997.79 | $8869.02
+2  $5728.65 | $5652.79
+3  $5521.99 | $5504.22
+4  $6523.65 | $6510.73
 ```

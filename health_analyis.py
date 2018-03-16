@@ -250,7 +250,7 @@ if __name__ == "__main__":
     should_be_objects.remove('year')
     to_object(medicare, should_be_objects)
     medicare_nans = count_nans(medicare)
-    # dropping all nans: While this does cut my data down to roughly a third of what it was, my reasoning is that since the purpose of this data set will be prediction, I would rather have the precision of my model decline due to the lack of data than have it ARTIFICIALLY increase due to reducing the noise in each column by imputing the mean.
+    
     medicare = medicare.dropna(axis=0)
     medicare['cost_per_beneficiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
 
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     ])
 
     alphas = [100, 10, 5]
-    alphas_2 = [4., 3., 2., 1.]
+    alphas_2 = [4., 3., 2.]
 
     for alpha in alphas_2:
         k = KFold(10)
