@@ -2,7 +2,7 @@
 
 ### Overview
 
-The [data](https://github.com/brendan-drew/County-Medicare-Spending/tree/master/data) that I used for this analysis is various measures of health care in the United States, measured for the counties of each state.
+The [data](https://github.com/brendan-drew/County-Medicare-Spending/tree/master/data) that I used for this analysis is composed of various measures of health care in the United States, measured for the counties of each state.
 
 There were quite a few data sets to choose from, the two I settled on are described below
 
@@ -153,7 +153,7 @@ Ridge Regression - 124.374
 
 Although Lasso does have the "worst" RMSE, I decided to choose that model since it was able to reduce the predictors from over 200 down to 57. For future applications this would mean that one could decreases the number of attributes that need to be measured by roughly 75%, while only increasing the RMSE by $26 per beneficiary.
 
-On the test set, the Lasso Regression model was off by almost the same amount as the cross validated RMSE, with a test RMSE 148.130. The first few predictions on the test set are printed alongside the actual values below.
+On the test set, the Lasso Regression model was off by almost the same amount as the cross validated RMSE, with a test RMSE $148.13. **The interpretations of this that my model will be roughly $148 off of the true cost per beneficiary per county.** The first few predictions on the test set are printed alongside the actual values below.
 
 ```
     Actual  | Predicted
