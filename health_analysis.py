@@ -53,10 +53,10 @@ def change_type(df):
     return df
 
 
-def import_dfs(years):
+def import_dfs(years, wd):
     df = pd.DataFrame()
     for year in years:
-        path = "/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_spending_by_county/pa_reimb_county_{}.xls".format(str(year))
+        path = wd + "medicare_spending_by_county/pa_reimb_county_{}.xls".format(str(year))
         subdf = format_excel(path)
         subdf = change_col_names(year, subdf)
         df = pd.concat([df, subdf])
@@ -233,7 +233,8 @@ if __name__ == "__main__":
     #===========================================================================
 
     # sahie data set
-    sahie = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
+    data_wd = "/Users/marsh/galvanize/dsi/projects/health_capstone/data/"
+    sahie = pd.read_csv(data_wd + "health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
 
     sahie = separate_states(sahie)
     sahie.drop(['Age Category','Income Category','Race Category','Sex Category','Demographic Group: MOE'], axis=1, inplace=True)
@@ -244,7 +245,7 @@ if __name__ == "__main__":
     to_object
 
     # mediare data set
-    medicare = pd.read_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/data/medicare_county_level/cleaned_medicare_county_all.csv")
+    medicare = pd.read_csv(data_wd + "/medicare_county_level/cleaned_medicare_county_all.csv")
     medicare.drop('unnamed:_0', axis=1, inplace=True)
     should_be_objects = list(medicare.select_dtypes(include=['int64']).columns)
     should_be_objects.remove('year')
@@ -256,7 +257,7 @@ if __name__ == "__main__":
 
     # medicare spending by year data set
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
-    med_spending = import_dfs(years)
+    med_spending = import_dfs(years, data_wd)
     med_spending = change_type(med_spending)
     to_object(med_spending, ['county_id'])
     med_spending_nans = count_nans(med_spending)
