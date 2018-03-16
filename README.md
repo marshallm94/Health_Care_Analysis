@@ -50,7 +50,9 @@
 ### Thursday, March 15, 2018
 #### Modeling
 
-* Create modeling pipeline, implementing Lasso and Cross Validation within PyMC.
+* Create modeling pipelines
+    * **complete**
+    * Ridge, Lasso and Linear Regression
 
 * Finalize Presentation.md
 

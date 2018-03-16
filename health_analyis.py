@@ -348,11 +348,6 @@ if __name__ == "__main__":
         regularized_dict["Lasso"] = [alpha, lasso_avg_cv_rsme]
         print(regularized_dict)
 
-
-
-
-
-
     models = [lasso_pipeline, linear_pipeline, ridge_pipeline]
     model_evaluation_dict = {}
     for model in models:
