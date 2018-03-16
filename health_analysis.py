@@ -226,36 +226,9 @@ def residual_plot(ax, x, y, y_hat, n_bins=50):
     ax.set_ylabel("Residuals ($y - \hat y$)")
 
 
-if __name__ == "__main__":
+def import_medicare_spending_data():
 
-    #===========================================================================
-    #=========================== DATA CLEANING =================================
-    #===========================================================================
-
-    # sahie data set
-    data_wd = "/Users/marsh/galvanize/dsi/projects/health_capstone/data/"
-    sahie = pd.read_csv(data_wd + "health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
-
-    sahie = separate_states(sahie)
-    sahie.drop(['Age Category','Income Category','Race Category','Sex Category','Demographic Group: MOE'], axis=1, inplace=True)
-    to_object(sahie, ["Year",'ID'])
-    to_float(sahie, ['Uninsured: Number',"Uninsured: MOE",'Insured: Number','Insured: MOE'])
-    sahie_nans = count_nans(sahie)
-    sahie = sahie.dropna(axis=0)
-    to_object
-
-    # mediare data set
-    medicare = pd.read_csv(data_wd + "/medicare_county_level/cleaned_medicare_county_all.csv")
-    medicare.drop('unnamed:_0', axis=1, inplace=True)
-    should_be_objects = list(medicare.select_dtypes(include=['int64']).columns)
-    should_be_objects.remove('year')
-    to_object(medicare, should_be_objects)
-    medicare_nans = count_nans(medicare)
-
-    medicare = medicare.dropna(axis=0)
-    medicare['cost_per_beneficiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
-
-    # medicare spending by year data set
+    # Other data sets proved more useful for analysis; abstracting med_soending data code away in case needed for further use
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
     med_spending = import_dfs(years, data_wd)
     med_spending = change_type(med_spending)
@@ -266,24 +239,62 @@ if __name__ == "__main__":
 
     states = list(sahie.groupby('state').count().index)
 
+    return med_spending
+
+
+if __name__ == "__main__":
+
+    #===========================================================================
+    #=========================== DATA CLEANING =================================
+    #===========================================================================
+
+    # sahie data set
+    data_wd = "/Users/marsh/galvanize/dsi/projects/health_capstone/data/"
+
+    sahie = pd.read_csv(data_wd + "health_insurance/SAHIE_31JAN17_13_18_47_11.csv")
+
+    sahie = separate_states(sahie)
+
+    useless_columns = ['Age Category','Income Category','Race Category','Sex Category','Demographic Group: MOE']
+    sahie.drop(useless_columns, axis=1, inplace=True)
+
+    to_object(sahie, ["Year",'ID'])
+    to_float(sahie, ['Uninsured: Number',"Uninsured: MOE",'Insured: Number','Insured: MOE'])
+
+    sahie_nans = count_nans(sahie)
+    sahie = sahie.dropna(axis=0)
+
+
+    # medicare data set
+    medicare = pd.read_csv(data_wd + "/medicare_county_level/cleaned_medicare_county_all.csv")
+
+    medicare.drop('unnamed:_0', axis=1, inplace=True)
+
+    to_object(medicare, ['Unnamed: 0','state_and_county_fips_code'])
+
+    medicare_nans = count_nans(medicare)
+
+    medicare = medicare.dropna(axis=0)
+    medicare['cost_per_beneficiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
+
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
 
-    heatmap(sahie, "figures/heatmap")
-
-    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-
-    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
-
-    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
-
-    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
-
-    # create csv for anova in R
-    df = sahie[['state','Year','Uninsured: %']]
-    df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
-    f, p = ANOVA(df, "Year", "Uninsured: %")
+    # heatmap(sahie, "figures/heatmap")
+    #
+    # descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+    #
+    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
+    #
+    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
+    #
+    # # create csv for anova in R
+    # df = sahie[['state','Year','Uninsured: %']]
+    # df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
+    # f, p = ANOVA(df, "Year", "Uninsured: %")
 
     #===========================================================================
     #=============================== MODELING ==================================
