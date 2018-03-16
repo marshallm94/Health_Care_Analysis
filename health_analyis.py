@@ -221,7 +221,7 @@ def ANOVA(df, group_column, target_column):
 
 def residual_plot(ax, x, y, y_hat, n_bins=50):
     residuals = y - y_hat
-    ax.axhline(0, color="black", linestyle="--")
+    ax.axhline(0, color="red", linestyle="--")
     ax.scatter(x, residuals, color="grey", alpha=0.5)
     ax.set_ylabel("Residuals ($y - \hat y$)")
 
@@ -382,8 +382,8 @@ if __name__ == "__main__":
     #========================= MODEL EVALUATION ================================
     #===========================================================================
 
-    # fig, ax = plt.subplots(figsize=(12, 3))
-    # residual_plot(ax, preds, y_train, preds)
-    # ax.set_title("Residuals by Predicted Values")
-    # ax.set_xlabel("$\hat y$")
-    # plt.show()
+    fig, ax = plt.subplots(figsize=(12, 3))
+    residual_plot(ax, preds, y_test, preds)
+    ax.set_title("Residuals by Predicted Values")
+    ax.set_xlabel("$\hat y$")
+    plt.show()

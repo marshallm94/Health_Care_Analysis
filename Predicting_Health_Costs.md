@@ -10,7 +10,7 @@
 
 2. Has there been a statistically significant change in the percentage of uninsured from year to year (2006 - 2014)?
 
-3. Predict total spending on medical expenses (aggregated across states)
+3. Predict predict total cost per beneficiary.
 
 
 ### Hypothesis Tests
@@ -61,31 +61,31 @@ Balanced one-way analysis of variance power calculation
               n = 3192
               f = 0.05
       sig.level = 0.05
-          power = 0.9999999
+          power = 0.99
 ```
 
 Looking further at *which* years have a significant difference, we get the following.
 
 ```
-2014-2006       0.000000e+00  
-2014-2007       0.000000e+00  
-2014-2008       0.000000e+00  
-2014-2009       0.000000e+00  
-2014-2010       0.000000e+00  
-2014-2011       0.000000e+00  
-2014-2012       0.000000e+00  
-2014-2013       0.000000e+00  
-2013-2010       3.320018e-10  
-2012-2010       5.573403e-10  
-2010-2007       6.386250e-07  
-2013-2009       3.482696e-05  
-2012-2009       5.065515e-05  
-2013-2006       8.212339e-05  
-2012-2006       1.178423e-04  
-2010-2008       3.270694e-04  
-2011-2010       5.093999e-03  
-2009-2007       6.502273e-03  
-2007-2006       1.220040e-02 
+2014-2006       0.000  
+2014-2007       0.000  
+2014-2008       0.000  
+2014-2009       0.000  
+2014-2010       0.000  
+2014-2011       0.000  
+2014-2012       0.000  
+2014-2013       0.000  
+2013-2010       3.320e-10  
+2012-2010       5.573e-10  
+2010-2007       6.386e-07  
+2013-2009       3.483e-05  
+2012-2009       5.066e-05  
+2013-2006       8.212e-05  
+2012-2006       1.178e-04  
+2010-2008       3.271e-04  
+2011-2010       5.094e-03  
+2009-2007       6.502e-03  
+2007-2006       1.220e-02
 ```
 
 When the theory doesn't fit the data, *we let the theory go*, therefore rejecting out null hypothesis and accepting the alternative.
@@ -117,4 +117,28 @@ state          50   603282    12066      1013    <2e-16 ***
 Residuals   28680   341498     12                   
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+### Modeling
+
+#### General Workflow
+
+1. Determine the models I wanted to try
+
+    * Ridge, Lasso, Linear Regression
+
+2. Tune the regularization parameter (alpha) for both Ridge and Lasso Regression
+
+    * 10-Fold cross-validation for each of 100, 10, 5
+
+        --> 10-Fold cross-validation for each of 4, 3, 2, 1
+
+        --> magic alpha = **2**
+
+3. Average the RSME of 10-Fold cross-validation for Ridge Regression, Lasso Regression (both with alpha = 2) and Linear Regression.
+
+```
+Lasso Regression - 148.280
+Linear Regression - 122.606
+Ridge Regression - 124.374
 ```
