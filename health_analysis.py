@@ -209,15 +209,12 @@ def heatmap(df, filename):
 
 
 def ANOVA(df, group_column, target_column):
-    masks = []
+    arrays = []
     for val in list(df.groupby(group_column).count().index):
         mask = df[group_column] == val
-        masks.append(mask)
-
-    arrays = []
-    for mask in masks:
         arr = df[mask][target_column]
         arrays.append(arr)
+
     return stats.f_oneway(arrays[0], arrays[1], arrays[2], arrays[3], arrays[4], arrays[5], arrays[6], arrays[7], arrays[8])
 
 
@@ -282,17 +279,17 @@ if __name__ == "__main__":
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
-
-    heatmap(sahie, "figures/heatmap")
-
-    descending_uninssured = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-
-    distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=descending_uninssured)
-
-    distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=descending_uninssured)
-
-    distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
-
+    #
+    # heatmap(sahie, "figures/heatmap")
+    #
+    # state_uninssured_descending = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
+    #
+    # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=state_uninssured_descending)
+    #
+    # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=state_uninssured_descending)
+    #
+    # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
+    #
     # create csv for anova in R
     df = sahie[['state','Year','Uninsured: %']]
     df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
