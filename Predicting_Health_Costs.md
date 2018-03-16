@@ -4,11 +4,11 @@
 
 The [data](https://github.com/brendan-drew/County-Medicare-Spending/tree/master/data) that I used for this analysis is various measures of health care in the United States, measured for the counties of each state.
 
-There wer quite a few data sets to choose from, the two I settled on described below
+There were quite a few data sets to choose from, the two I settled on are described below
 
 ##### Inference Data Set
 
-With a little over 28,000 rows and 13, the only cleang I had to do on this data set was to drop the first four columns you can see (one group per column, not adding any information to the data), and change the name column to be only states.
+With a little over 28,000 rows and 13, the only cleaning I had to do on this data set was drop the first four columns you can see (one group per column, not adding any information to the data), and change the name column to be only states.
 
 ![](figures/inference_data_screenshot.png)
 
@@ -143,7 +143,7 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
         --> magic alpha = **2**
 
-3. Average the RMSE of 10-Fold cross-validation for Ridge Regression, Lasso Regression (both with alpha = 2) and Linear Regression, the result of which are below.
+3. Average the RMSE of 10-Fold cross-validation for Ridge Regression, Lasso Regression (both with alpha = 2) and Linear Regression, the results of which are below.
 
 ```
 Lasso Regression - 148.280
