@@ -394,4 +394,4 @@ if __name__ == "__main__":
     coef_df = pd.DataFrame(coef_dict)
     non_zero = coef_df['Coefficient'] != 0
     coef_df = coef_df[non_zero]
-    coef_df.sort_values('Coefficient')
+    coef_df = coef_df.sort_values('Coefficient', ascending=False)

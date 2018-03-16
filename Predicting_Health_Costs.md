@@ -151,7 +151,7 @@ Linear Regression - 122.606
 Ridge Regression - 124.374
 ```
 
-Although Lasso does have the "worst" RMSE, I decided to choose that model since it was able to reduce the predictors from over 200 down to 57.
+Although Lasso does have the "worst" RMSE, I decided to choose that model since it was able to reduce the predictors from over 200 down to 57. For future applications this would mean that one could decreases the number of attributes that need to be measured by roughly 75%, while only increasing the RMSE by $26 per beneficiary.
 
 On the test set, the Lasso Regression model was off by almost the same amount as the cross validated RMSE, with a test RMSE 148.130. The first few predictions on the test set are printed alongside the actual values below.
 
@@ -163,4 +163,17 @@ On the test set, the Lasso Regression model was off by almost the same amount as
 3  $4062.92 | $4214.87
 4   $7057.5 | $7025.31
 5  $6885.39 | $7177.14
+```
+
+The 5 predictors with the largest *negative* coefficients are shown below. While some of these are expected to be correlated with the two variables I used to create my response variable "Cost Per Beneficiary" (i.e. `ma_beneficiaries` and `cost_per_beneficiary` have a correlation of 0.93), the last variable's presence in the top predictors is interesting.
+
+Holding all else constant, a one unit increase in the percent non-hispanic white would decrease the predicted cost per beneficiary by $19.52
+
+```
+                    Attribute                      Coefficient
+    ma_participation_rate                       | -1127.556682
+    dme_actual_costs_as_%_of_total_actual_costs | -149.939329
+    ma_beneficiaries                            | -140.339589
+    pac:_hh_standardized_costs                  | -108.581941
+    percent_non-hispanic_white                  | -19.524727
 ```
