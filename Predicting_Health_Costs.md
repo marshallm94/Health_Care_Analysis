@@ -18,10 +18,9 @@ With 25,000 rows and 221 columns, this data set has a lot of NaN's. After toying
 
 ![](figures/prediction_data_screenshot.png)
 
-
-
-
 ### Guiding Questions/Goals
+
+My analysis was guiding by the following:
 
 1. Is there a statistically significant difference in the percentage of uninsured individuals across states?
 
@@ -32,11 +31,11 @@ With 25,000 rows and 221 columns, this data set has a lot of NaN's. After toying
 
 ### Hypothesis Tests
 
-Although, I will be predicting on a different data set, before setting out to answer my two inferential questions, I decided to view a correlation matrix to get a sense of how my data behaved. The only thing to note is that, as expected, the percent uninsured and the percent insured are perfectly negatively correlated.
+Although, I will be predicting on a different data set, before setting out to answer my two inferential questions, I decided to view a correlation matrix to get a sense of how my data behaved (I decided not show a similar plot for my prediction matrix due to the dimension size). The only thing to note is that, as expected, the percent uninsured and the percent insured are perfectly negatively correlated.
 
 ![](figures/heatmap.png)
 
-Moving forward, for both hypothesis tests, my signficance level will be 0.05.
+Moving forward, for both hypothesis tests, *my significance level will be 0.05*.
 
 #### Question
 
@@ -54,7 +53,7 @@ Has there been a statistically significant change in the percentage of uninsured
 
 Although visually it seems unnecessary to prove this statistically, when I *did* perform ANOVA on this data, the result was rather shocking.
 
-Calculated in Python using `scipy.stats.f_oneway`, by passing the arrays of the Uninsure: % for each year, an F-Statistic of **153** is returned, with a corresponding P-Value far below my level of signficance.
+Calculated in Python using `scipy.stats.f_oneway`, by passing the arrays of the Uninsured: % for each year, an F-Statistic of **153** is returned, with a corresponding P-Value far below my level of significance.
 
 With a little disbelief, I turned to R to confirm these findings, reproduced below.
 
@@ -81,17 +80,9 @@ Balanced one-way analysis of variance power calculation
           power = 0.99
 ```
 
-Looking further at *which* years have a significant difference, we get the following.
+Looking further at *which* years have a significant difference, we get the following (Note that **I omitted all comparisons to 2014** from the below table; all the P-Values were effectively zero and I wanted to show the other comparisons as well)
 
 ```
-2014-2006       0.000  
-2014-2007       0.000  
-2014-2008       0.000  
-2014-2009       0.000  
-2014-2010       0.000  
-2014-2011       0.000  
-2014-2012       0.000  
-2014-2013       0.000  
 2013-2010       3.320e-10  
 2012-2010       5.573e-10  
 2010-2007       6.386e-07  
@@ -105,7 +96,7 @@ Looking further at *which* years have a significant difference, we get the follo
 2007-2006       1.220e-02
 ```
 
-When the theory doesn't fit the data, *we let the theory go*, therefore rejecting out null hypothesis and accepting the alternative.
+Although shocking, with 3100 observations per year, and variance that was roughly 1% of that (~30), it becomes clear that even if the difference between years is small, our confidence in that difference is high due to a very small standard error.
 
 #### Question
 
@@ -152,7 +143,7 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
         --> magic alpha = **2**
 
-3. Average the RSME of 10-Fold cross-validation for Ridge Regression, Lasso Regression (both with alpha = 2) and Linear Regression.
+3. Average the RMSE of 10-Fold cross-validation for Ridge Regression, Lasso Regression (both with alpha = 2) and Linear Regression, the result of which are below.
 
 ```
 Lasso Regression - 148.280
@@ -160,11 +151,16 @@ Linear Regression - 122.606
 Ridge Regression - 124.374
 ```
 
+Although Lasso does have the "worst" RMSE, I decided to choose that model since it was able to reduce the predictors from over 200 down to 57.
+
+On the test set, the Lasso Regression model was off by almost the same amount as the cross validated RMSE, with a test RMSE 148.130. The first few predictions on the test set are printed alongside the actual values below.
+
 ```
     Actual  | Predicted
-0  $8290.63 | $8326.37
-1  $8997.79 | $8869.02
-2  $5728.65 | $5652.79
-3  $5521.99 | $5504.22
-4  $6523.65 | $6510.73
+0  $7538.19 | $7601.56
+1   $7488.2 | $7634.26
+2  $7593.14 | $7697.01
+3  $4062.92 | $4214.87
+4   $7057.5 | $7025.31
+5  $6885.39 | $7177.14
 ```

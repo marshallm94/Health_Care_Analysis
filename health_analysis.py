@@ -250,7 +250,7 @@ if __name__ == "__main__":
     should_be_objects.remove('year')
     to_object(medicare, should_be_objects)
     medicare_nans = count_nans(medicare)
-    
+
     medicare = medicare.dropna(axis=0)
     medicare['cost_per_beneficiary'] = medicare['total_actual_costs'] / medicare["beneficiaries_with_part_a_and_part_b"]
 
@@ -373,15 +373,25 @@ if __name__ == "__main__":
     #========================= MODEL EVALUATION ================================
     #===========================================================================
 
-    preds = linear_pipeline.predict(x_test)
+    preds = lasso_pipeline.predict(x_test)
     test_rsme = m.sqrt(mean_squared_error(y_test, preds))
     print(test_rsme)
 
     pred_real_dict = {"Predicted": [], "Actual": []}
     for x, i in enumerate(preds[:6]):
-        predicted = "$" + str(round(preds[x][0], 2))
+        predicted = "$" + str(round(preds[x], 2))
         actual = "$" + str(round(y_test.iloc[x, 0], 2))
         pred_real_dict["Predicted"].append(predicted)
         pred_real_dict["Actual"].append(actual)
 
     predicted_actual_df = pd.DataFrame(pred_real_dict)
+
+    coef_dict = {"Attribute": [], "Coefficient": []}
+    for x, i in enumerate(x_test.columns):
+        coef_dict["Attribute"].append(x_test.columns[x])
+        coef_dict["Coefficient"].append(lasso_pipeline.named_steps['lasso'].coef_[x])
+
+    coef_df = pd.DataFrame(coef_dict)
+    non_zero = coef_df['Coefficient'] != 0
+    coef_df = coef_df[non_zero]
+    coef_df.sort_values('Coefficient')
