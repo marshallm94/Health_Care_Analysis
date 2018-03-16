@@ -129,6 +129,14 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 ### Modeling
 
+I decided to create a new feature for prediction, which I called **Cost per Beneficiary**. This was calculated by dividing the Beneficiaries with Part A and Part B coverage by the Total Actual Costs.
+
+* Part A Coverage = Inpatient expenses (hospitalization, etc)
+* Part B Coverage = Outpatient expenses (doctor visits, etc.)
+
+
+* **Cost per Beneficiary = Beneficiaries with Part A and Part B / Total Actual Costs**
+
 #### General Workflow
 
 1. Determine the models I wanted to try
