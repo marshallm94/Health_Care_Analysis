@@ -243,8 +243,14 @@ def import_medicare_spending_data():
 
 def tune_regularization_parameter(alphas, folds=10):
     """
-    Cross validates
+    Iterates through alphas, cross validating both Lasso and Ridge Regression parameterized by that alpha, using the RMSE loss function.
 
+    Input:
+        alphas: (list) - List of alphas
+        folds: (int) - number of folds for k-fold cross validation
+
+    Output:
+        Pandas DataFrame - Contains Alpha, Lasso_RMSE and Ridge_RMSE columns
     """
     regularized_dict = {"Ridge_RMSE": [], "Lasso_RMSE": [], "Alpha": []}
     for alpha in alphas:
@@ -286,11 +292,7 @@ def tune_regularization_parameter(alphas, folds=10):
         regularized_dict["Ridge_RMSE"].append(avg_ridge)
         regularized_dict["Lasso_RMSE"].append(avg_lasso)
 
-        # print(regularized_dict)
-
     return pd.DataFrame(regularized_dict)
-
-
 
 
 if __name__ == "__main__":
@@ -359,11 +361,9 @@ if __name__ == "__main__":
 
     x_train, x_test, y_train, y_test = train_test_split(X, y)
 
-    alphas = [100, 10, 5]
-    alphas_2 = [4., 3., 2.]
+    alphas = [100., 10., 5., 4., 3., 2.]
 
-    test = tune_regularization_parameter(alphas)
-    tune_regularization_parameter(alphas_2)
+    cross_validated_alphas = tune_regularization_parameter(alphas)
 
     # lasso_pipeline = Pipeline([
     #     ("standardize", StandardScaler()),
