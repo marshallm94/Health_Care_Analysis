@@ -7,13 +7,11 @@ import seaborn as sns
 import random
 import scipy.stats as stats
 from sklearn.pipeline import Pipeline
-from basis_expansions.basis_expansions import NaturalCubicSpline
 from sklearn.linear_model import Lasso, LinearRegression, Ridge
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 import os,sys
-import pymc3 as pm
 
 
 def format_excel(filepath):
@@ -218,13 +216,6 @@ def ANOVA(df, group_column, target_column):
     return stats.f_oneway(arrays[0], arrays[1], arrays[2], arrays[3], arrays[4], arrays[5], arrays[6], arrays[7], arrays[8])
 
 
-def residual_plot(ax, x, y, y_hat, n_bins=50):
-    residuals = y - y_hat
-    ax.axhline(0, color="red", linestyle="--")
-    ax.scatter(x, residuals, color="grey", alpha=0.5)
-    ax.set_ylabel("Residuals ($y - \hat y$)")
-
-
 def import_medicare_spending_data():
 
     # Other data sets proved more useful for analysis; abstracting med_soending data code away in case needed for further use
@@ -245,7 +236,7 @@ def tune_regularization_parameter(alphas, folds=10):
     """
     Iterates through alphas, cross validating both Lasso and Ridge Regression parameterized by that alpha, using the RMSE loss function.
 
-    Input:
+    Inputs:
         alphas: (list) - List of alphas
         folds: (int) - number of folds for k-fold cross validation
 
@@ -295,6 +286,54 @@ def tune_regularization_parameter(alphas, folds=10):
     return pd.DataFrame(regularized_dict)
 
 
+def cv_multiple_model_pipelines(models, folds=10):
+    """
+    Iterates through models, fitting and evaluating the RMSE of each model pipeline utilizing KFold cross validation with K = Folds
+
+    Inputs:
+        models: (list) - A list of model Pipelines
+        folds: (int) - number of folds for k-fold cross validation
+
+    Output:
+        Dictionary - Keys = Names of models, Values = RMSE over KFold cross validation with K = folds
+    """
+    model_evaluation_dict = {}
+
+    for model in models:
+
+        k = KFold(folds)
+        rmse_lis = []
+
+        for train_index, test_index in k.split(x_train):
+
+            x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
+            y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
+
+            model.fit(x_cv, y_cv)
+            predictions = model.predict(x_cv_test)
+            rmse = m.sqrt(mean_squared_error(y_cv_test, predictions))
+
+            rmse_lis.append(rmse)
+
+        avg_cv_rsme = np.mean(rmse_lis)
+        model_name = list(model.named_steps.keys())[1]
+        model_evaluation_dict[model_name] = avg_cv_rsme
+
+    return model_evaluation_dict
+
+
+def prediction_actual_df(predictions, true_values):
+
+    pred_real_dict = {"Predicted": [], "Actual": []}
+    for x, i in enumerate(predictions):
+        predicted = round(predictions[x], 2)
+        actual = round(true_values.iloc[x, 0], 2)
+        pred_real_dict["Predicted"].append(predicted)
+        pred_real_dict["Actual"].append(actual)
+
+    return pd.DataFrame(pred_real_dict)
+
+
 if __name__ == "__main__":
 
     #===========================================================================
@@ -333,17 +372,17 @@ if __name__ == "__main__":
     #===========================================================================
     #=============== VISUALIZATION, EDA & HYPOTHESIS TESTING ===================
     #===========================================================================
-    #
+
     # heatmap(sahie, "figures/heatmap")
-    #
+
     # state_uninssured_descending = list(sahie.groupby("state").mean().sort_values('Uninsured: %', ascending=False).index)
-    #
+
     # distribution_plot(sahie, "state", "Uninsured: %", "State", "Percentage (%) Uninsured", "Percentage Uninsured Across States", filename="figures/state_vs_uninsured", order=state_uninssured_descending)
     #
     # distribution_plot(sahie, 'state', 'Uninsured: %', 'State', "Percentage (%) Uninsured", "Ordered Percentage Uninsured Across States", plot_type="bar", filename="figures/state_vs_uninsured_bar", order=state_uninssured_descending)
     #
     # distribution_plot(sahie, "Year", "Uninsured: %", "Year", "Percentage (%) Uninsured", "Percentage Uninsured Across Years", plot_type="violin", filename="figures/year_vs_uninsured")
-    #
+
     # create csv for anova in R
     df = sahie[['state','Year','Uninsured: %']]
     df.to_csv("/Users/marsh/galvanize/dsi/projects/health_capstone/anova.csv")
@@ -365,104 +404,42 @@ if __name__ == "__main__":
 
     cross_validated_alphas = tune_regularization_parameter(alphas)
 
-    # lasso_pipeline = Pipeline([
-    #     ("standardize", StandardScaler()),
-    #     ("lasso", Lasso(2.0))
-    # ])
-    #
-    # linear_pipeline = Pipeline([
-    #     ("standardize", StandardScaler()),
-    #     ("regression", LinearRegression())
-    # ])
-    #
-    # ridge_pipeline = Pipeline([
-    #     ("standardize", StandardScaler()),
-    #     ("ridge", Ridge(2.0))
-    # ])
-    #
-    # #
-    # for alpha in alphas_2:
-    #     k = KFold(10)
-    #     ridge_rsme_lis = []
-    #     lasso_rsme_lis = []
-    #     regularized_dict = {}
-    #     for train_index, test_index in k.split(x_train):
-    #
-    #         x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
-    #         y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
-    #
-    #         ridge_pipe = Pipeline([
-    #             ("standardize", StandardScaler()),
-    #             ("ridge", Ridge(alpha=alpha))
-    #         ])
-    #         lasso_pipe = Pipeline([
-    #             ("standardize", StandardScaler()),
-    #             ("lasso", Lasso(alpha=alpha))
-    #         ])
-    #
-    #         ridge_pipe.fit(x_cv, y_cv)
-    #         lasso_pipe.fit(x_cv, y_cv)
-    #
-    #         ridge_predictions = ridge_pipe.predict(x_cv_test)
-    #         lasso_predictions = lasso_pipe.predict(x_cv_test)
-    #
-    #         ridge_rsme = m.sqrt(mean_squared_error(y_cv_test, ridge_predictions))
-    #         lasso_rsme = m.sqrt(mean_squared_error(y_cv_test, lasso_predictions))
-    #
-    #         ridge_rsme_lis.append(ridge_rsme)
-    #         lasso_rsme_lis.append(lasso_rsme)
-    #
-    #     ridge_avg_cv_rsme = sum(ridge_rsme_lis)/len(ridge_rsme_lis)
-    #     lasso_avg_cv_rsme = sum(lasso_rsme_lis)/len(lasso_rsme_lis)
-    #
-    #     regularized_dict["Ridge"] = [alpha, ridge_avg_cv_rsme]
-    #     regularized_dict["Lasso"] = [alpha, lasso_avg_cv_rsme]
-    #     print(regularized_dict)
-    #
-    # models = [lasso_pipeline, linear_pipeline, ridge_pipeline]
-    # model_evaluation_dict = {}
-    # for model in models:
-    #     k = KFold(10)
-    #     rsme_lis = []
-    #     for train_index, test_index in k.split(x_train):
-    #
-    #         x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
-    #         y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
-    #
-    #         model.fit(x_cv, y_cv)
-    #         predictions = model.predict(x_cv_test)
-    #         rsme = m.sqrt(mean_squared_error(y_cv_test, predictions))
-    #         model_name = list(model.named_steps.keys())[1]
-    #         print(f"Model - {model_name} | RSME - {rsme}")
-    #         rsme_lis.append(rsme)
-    #
-    #     avg_cv_rsme = sum(rsme_lis)/len(rsme_lis)
-    #
-    #     model_evaluation_dict[model_name] = avg_cv_rsme
+    # Model Pipelines to test
+    lasso_pipeline = Pipeline([
+        ("standardize", StandardScaler()),
+        ("lasso", Lasso(2.0))
+    ])
+
+    linear_pipeline = Pipeline([
+        ("standardize", StandardScaler()),
+        ("regression", LinearRegression())
+    ])
+
+    ridge_pipeline = Pipeline([
+        ("standardize", StandardScaler()),
+        ("ridge", Ridge(2.0))
+    ])
+
+    models = [lasso_pipeline, linear_pipeline, ridge_pipeline]
+
+    cross_validation_results = cv_multiple_model_pipelines(models)
 
     #===========================================================================
-    #========================= MODEL EVALUATION ================================
+    #================== MODEL EVALUATION: TEST SET =============================
     #===========================================================================
-    #
-    # preds = lasso_pipeline.predict(x_test)
-    # test_rsme = m.sqrt(mean_squared_error(y_test, preds))
-    # print(test_rsme)
-    #
-    # pred_real_dict = {"Predicted": [], "Actual": []}
-    # for x, i in enumerate(preds[:6]):
-    #     predicted = "$" + str(round(preds[x], 2))
-    #     actual = "$" + str(round(y_test.iloc[x, 0], 2))
-    #     pred_real_dict["Predicted"].append(predicted)
-    #     pred_real_dict["Actual"].append(actual)
-    #
-    # predicted_actual_df = pd.DataFrame(pred_real_dict)
-    #
-    # coef_dict = {"Attribute": [], "Coefficient": []}
-    # for x, i in enumerate(x_test.columns):
-    #     coef_dict["Attribute"].append(x_test.columns[x])
-    #     coef_dict["Coefficient"].append(lasso_pipeline.named_steps['lasso'].coef_[x])
-    #
-    # coef_df = pd.DataFrame(coef_dict)
-    # non_zero = coef_df['Coefficient'] != 0
-    # coef_df = coef_df[non_zero]
-    # coef_df = coef_df.sort_values('Coefficient', ascending=False)
+
+    preds = lasso_pipeline.predict(x_test)
+    test_rsme = m.sqrt(mean_squared_error(y_test, preds))
+    print(f"\nLasso Regression testing RMSE | {test_rsme}")
+
+    predicted_actual_df = prediction_actual_df(preds, y_test)
+
+    coef_dict = {"Attribute": [], "Coefficient": []}
+    for x, i in enumerate(x_test.columns):
+        coef_dict["Attribute"].append(x_test.columns[x])
+        coef_dict["Coefficient"].append(lasso_pipeline.named_steps['lasso'].coef_[x])
+
+    coef_df = pd.DataFrame(coef_dict)
+    non_zero = coef_df['Coefficient'] != 0
+    coef_df = coef_df[non_zero]
+    coef_df = coef_df.sort_values('Coefficient', ascending=False)
