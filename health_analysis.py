@@ -241,6 +241,58 @@ def import_medicare_spending_data():
     return med_spending
 
 
+def tune_regularization_parameter(alphas, folds=10):
+    """
+    Cross validates
+
+    """
+    regularized_dict = {"Ridge_RMSE": [], "Lasso_RMSE": [], "Alpha": []}
+    for alpha in alphas:
+        k = KFold(folds)
+
+        ridge_rsme_lis = []
+        lasso_rsme_lis = []
+
+        for train_index, test_index in k.split(x_train):
+
+            x_cv, x_cv_test = x_train.iloc[train_index,:], x_train.iloc[test_index,:]
+            y_cv, y_cv_test = y_train.iloc[train_index,:], y_train.iloc[test_index,:]
+
+            ridge_pipe = Pipeline([
+                ("standardize", StandardScaler()),
+                ("ridge", Ridge(alpha=alpha))
+            ])
+            lasso_pipe = Pipeline([
+                ("standardize", StandardScaler()),
+                ("lasso", Lasso(alpha=alpha))
+            ])
+
+            ridge_pipe.fit(x_cv, y_cv)
+            lasso_pipe.fit(x_cv, y_cv)
+
+            ridge_predictions = ridge_pipe.predict(x_cv_test)
+            lasso_predictions = lasso_pipe.predict(x_cv_test)
+
+            ridge_rmse = m.sqrt(mean_squared_error(y_cv_test, ridge_predictions))
+            lasso_rmse = m.sqrt(mean_squared_error(y_cv_test, lasso_predictions))
+
+            ridge_rsme_lis.append(ridge_rmse)
+            lasso_rsme_lis.append(lasso_rmse)
+
+        avg_ridge = np.mean(ridge_rsme_lis)
+        avg_lasso = np.mean(lasso_rsme_lis)
+
+        regularized_dict["Alpha"].append(alpha)
+        regularized_dict["Ridge_RMSE"].append(avg_ridge)
+        regularized_dict["Lasso_RMSE"].append(avg_lasso)
+
+        # print(regularized_dict)
+
+    return pd.DataFrame(regularized_dict)
+
+
+
+
 if __name__ == "__main__":
 
     #===========================================================================
@@ -298,12 +350,21 @@ if __name__ == "__main__":
     #===========================================================================
     #=============================== MODELING ==================================
     #===========================================================================
-    #
-    # numerics = medicare[medicare.select_dtypes(exclude=['object']).columns]
-    # X = numerics.drop('cost_per_beneficiary', axis=1)
-    # y = pd.DataFrame(numerics['cost_per_beneficiary'])
-    # x_train, x_test, y_train, y_test = train_test_split(X, y)
-    #
+
+    # select continuous attributes for modeling
+    numerics = medicare[medicare.select_dtypes(exclude=['object']).columns]
+
+    X = numerics.drop('cost_per_beneficiary', axis=1)
+    y = pd.DataFrame(numerics['cost_per_beneficiary'])
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y)
+
+    alphas = [100, 10, 5]
+    alphas_2 = [4., 3., 2.]
+
+    test = tune_regularization_parameter(alphas)
+    tune_regularization_parameter(alphas_2)
+
     # lasso_pipeline = Pipeline([
     #     ("standardize", StandardScaler()),
     #     ("lasso", Lasso(2.0))
@@ -319,9 +380,7 @@ if __name__ == "__main__":
     #     ("ridge", Ridge(2.0))
     # ])
     #
-    # alphas = [100, 10, 5]
-    # alphas_2 = [4., 3., 2.]
-    #
+    # #
     # for alpha in alphas_2:
     #     k = KFold(10)
     #     ridge_rsme_lis = []
