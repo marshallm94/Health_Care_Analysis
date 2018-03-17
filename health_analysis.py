@@ -15,6 +15,9 @@ import os,sys
 
 
 def format_excel(filepath):
+    """
+    Used in conjunction with other methods to import .xlsx files in ./data/medicare_spending_by_county
+    """
     df = pd.read_excel(filepath)
 
     for column in df.columns:
@@ -45,6 +48,11 @@ def format_excel(filepath):
 
 
 def change_type(df):
+    """
+    Used in conjunction with other methods to import .xlsx files in ./data/medicare_spending_by_county
+
+    Change columns with "_adj" in column name to be floats
+    """
     for column in df.columns:
         if "_adj" in column:
             df[column] = df[column].astype(float)
@@ -52,6 +60,11 @@ def change_type(df):
 
 
 def import_dfs(years, wd):
+    """
+    Used in conjunction with other methods to import .xlsx files in ./data/medicare_spending_by_county
+
+    Iterates through each file in the above directory and combines all files into one Pandas DataFrame.
+    """
     df = pd.DataFrame()
     for year in years:
         path = wd + "medicare_spending_by_county/pa_reimb_county_{}.xls".format(str(year))
@@ -62,6 +75,11 @@ def import_dfs(years, wd):
 
 
 def change_col_names(year, df):
+    """
+    Used in conjunction with other methods to import .xlsx files in ./data/medicare_spending_by_county
+
+    Removes redundant columns from data frame.
+    """
     new_cols = []
     df['year'] = str(year)
 
@@ -77,6 +95,9 @@ def change_col_names(year, df):
 
 
 def separate_states(df):
+    """
+    Creates a new state column where each entry is the proper abbreviation of the appropriate state.
+    """
     abbr_dict = {
         'AK': 'Alaska',
         'AL': 'Alabama',
@@ -160,6 +181,9 @@ def remove_commas(df, column_name):
 
 
 def count_nans(data):
+    """
+    Counts the NaN values in each column in a Pandas Data Frame, exluding columns of type object.
+    """
     total = []
     for column in data.select_dtypes(exclude=['object']).columns:
         count = np.sum(np.isnan(data[column].values))
@@ -168,12 +192,30 @@ def count_nans(data):
 
 
 def replace_nans(data):
+    """
+    Replace NA's in a column by imputing a random choice of a non-NA value in that same column
+    """
     for column in data.select_dtypes(exclude=['object']).columns:
         items = data[column].dropna(axis=0, inplace = False)
         data[column].fillna(random.choice(list(items)), inplace = True)
 
 
 def distribution_plot(df, column_name, target_column, xlab, ylab, title, filename, plot_type="box", order=None):
+    """
+    Create various plot types leverage matplotlib.
+
+    Inputs:
+        df: (Pandas DataFrame)
+        column_name: (str) - A column in df that you want to have on the x-axis
+        target_column: (str) - A column in df that you want to have on the y_axis
+        xlab, ylab, title: (all str) - Strings for the x label, y label and title of the plot, respectively.
+        filename: (str) - the relative path to which you would like to save the image
+        plot_type: (str) - "box", "violin" or "bar"
+        order: (None (default) or list) - the ordering of the variable on the x-axis
+
+    Output:
+        None (displays figure and saves image)
+    """
     fig = plt.figure(figsize=(13,6))
     ax = fig.add_subplot(111)
     if plot_type == "box":
@@ -193,6 +235,16 @@ def distribution_plot(df, column_name, target_column, xlab, ylab, title, filenam
 
 
 def heatmap(df, filename):
+    """
+    Creaates a heatmap of the correlation matrix of df (Pandas DataFrame).
+
+    Inputs:
+        df: (Pandas DataFrame)
+        filename: (str) - the path to which you would like to save the image.
+
+    Output:
+        None (displays figure and saves image)
+    """
     corr = df.corr()
     ylabels = ["{} = {}".format(col, x + 1) for x, col in enumerate(list(corr.columns))]
     xlabels = [str(x + 1) for x in range(len(ylabels))]
@@ -207,6 +259,16 @@ def heatmap(df, filename):
 
 
 def ANOVA(df, group_column, target_column):
+    """
+    Performs Analysis of Variance leveraging scipy.stats
+
+    Inputs:
+        group_column: (str) - The categorical column in df you would like to perform the test on.
+        target_column: (str) - The continuous column in df to calculate the means of each group
+
+    Output:
+        scipy.stats.F-statistic object
+    """
     arrays = []
     for val in list(df.groupby(group_column).count().index):
         mask = df[group_column] == val
@@ -217,6 +279,9 @@ def ANOVA(df, group_column, target_column):
 
 
 def import_medicare_spending_data():
+    """
+    Used in conjunction with other methods to import .xlsx files in ./data/medicare_spending_by_county
+    """
 
     # Other data sets proved more useful for analysis; abstracting med_soending data code away in case needed for further use
     years = [2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014]
@@ -323,7 +388,9 @@ def cv_multiple_model_pipelines(models, folds=10):
 
 
 def prediction_actual_df(predictions, true_values):
-
+    """
+    Creates a two column DataFrame with the predicted values and actual value on the same row.
+    """
     pred_real_dict = {"Predicted": [], "Actual": []}
     for x, i in enumerate(predictions):
         predicted = round(predictions[x], 2)
